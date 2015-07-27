@@ -64,5 +64,31 @@ proc print data=scored(obs=20);
    var p ins dda ddabal dep depamt cashbk checks;
 run;
 
+* Output the odds ratio
+
+ods output parameterEstimates = betas2;
+proc logistic data=aaron.develop des;
+   model ins=dda ddabal dep depamt cashbk checks;
+run;
+proc print data=betas2;
+   var variable estimate;
+run;
+
+* Char 2: Correcting for Oversampling;
+
+%let pi1=.02;
+
+%let rho1 = 0.346361;
+
+* correct to the population level: PRIOREVENT=;
+
+proc logistic data=aaron.develop des;
+   model ins=dda ddabal dep depamt cashbk checks;
+   score data = aaron.new out=scored priorevent=&pi1;
+run;
+
+proc print data=scored(obs=20);
+   var P_1 dda ddabal dep depamt cashbk checks;
+run;
 
               
