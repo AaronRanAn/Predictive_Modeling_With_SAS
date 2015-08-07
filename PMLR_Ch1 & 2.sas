@@ -9,6 +9,8 @@ mm mmbal mmcred mtg mtgbal sav savbal cc ccbal
 ccpurc sdb income hmown lores hmval age crscore
 moved inarea;
 
+* Run the above code every time for these practice;
+
 proc means data=aaron.develop n nmiss mean min max;
    var &inputs;
 run;
@@ -91,4 +93,42 @@ proc print data=scored(obs=20);
    var P_1 dda ddabal dep depamt cashbk checks;
 run;
 
-              
+* Char 3: Preparing the input variables;
+
+data develop1;
+   set aaron.develop;
+   /* name the missing indicator variables */
+   array mi{*} MIAcctAg MIPhone MIPOS MIPOSAmt
+               MIInv MIInvBal MICC MICCBal
+               MICCPurc MIIncome MIHMOwn MILORes
+               MIHMVal MIAge MICRScor;
+   /* select variables with missing values */
+   array x{*} acctage phone pos posamt
+              inv invbal cc ccbal
+              ccpurc income hmown lores
+              hmval age crscore;
+   do i=1 to dim(mi);
+      mi{i}=(x{i}=.);
+end; run;
+
+proc stdize data=develop1
+            reponly
+            method=median
+            out=imputed;
+   var &inputs;
+run;
+proc print data=imputed(obs=12);
+   var ccbal miccbal ccpurc miccpurc
+       income miincome hmown mihmown;
+run;
+
+* Clustering Levels of Categorical Inputs;
+
+proc means data=imputed noprint nway;
+   class branch;
+   var ins;
+   output out=level mean=prop;
+run;
+
+proc print data=level;
+run;              
