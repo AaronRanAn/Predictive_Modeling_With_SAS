@@ -122,7 +122,8 @@ proc print data=imputed(obs=12);
        income miincome hmown mihmown;
 run;
 
-* Clustering Levels of Categorical Inputs;
+
+* 3.2 Categorical Variable;
 
 proc means data=imputed noprint nway;
    class branch;
@@ -132,3 +133,74 @@ run;
 
 proc print data=level;
 run;              
+
+* 3.2 Categorical Variable;
+
+ods trace on/listing;
+proc cluster data=level method=ward
+     outtree=fortree;
+   freq _freq_;
+   var prop;
+   id branch;
+run;
+ods trace off;
+
+ods listing close;
+ods output clusterhistory=cluster;
+proc cluster data=level method=ward;
+   freq _freq_;
+var prop;
+   id branch;
+run;
+ods listing;
+proc print data=cluster;
+run;
+
+proc freq data=imputed noprint;
+   tables branch*ins / chisq;
+   output out=chi(keep=_pchi_) chisq;
+run;
+proc print data=chi;
+run;
+
+data cutoff;
+   if _n_ = 1 then set chi;
+   set cluster;
+   chisquare=_pchi_*rsquared;
+   degfree=numberofclusters-1;
+   logpvalue=logsdf('CHISQ',chisquare,degfree);
+run;
+
+proc plot data=cutoff;
+   plot logpvalue*numberofclusters/vpos=30;
+run; quit;
+
+proc sql;
+   select NumberOfClusters into :ncl
+   from cutoff
+   having logpvalue=min(logpvalue);
+quit;
+
+proc tree data=fortree h=rsq
+          nclusters=&ncl out=clus;
+   id branch;
+run;
+
+proc sort data=clus;
+   by clusname;
+run;
+proc print data=clus;
+   by clusname;
+   id clusname;
+run;
+
+data imputed;
+   set imputed;
+   brclus1=(branch in ('B6','B9','B19','B8','B1','B17',
+           'B3','B5','B13','B12','B4','B10'));
+   brclus2=(branch='B15');
+   brclus3=(branch='B16');
+   brclus4=(branch='B14');
+run;
+
+
