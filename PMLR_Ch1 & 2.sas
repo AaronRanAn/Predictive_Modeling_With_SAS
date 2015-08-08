@@ -203,4 +203,16 @@ data imputed;
    brclus4=(branch='B14');
 run;
 
+*******;
+
+proc varclus data=imputed
+             maxeigen=.7
+             outtree=fortree
+             short;
+   var &inputs brclus1-brclus4 miacctag
+       miphone mipos miposamt miinv
+       miinvbal micc miccbal miccpurc
+       miincome mihmown milores mihmval
+       miage micrscor;
+run;
 
