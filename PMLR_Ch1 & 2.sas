@@ -216,3 +216,10 @@ proc varclus data=imputed
        miage micrscor;
 run;
 
+* 3.4 Automatic Subset Selection;
+
+proc logistic data=aaron.imputed des;
+   class res;
+   model ins=&screened res / selection=backward fast
+         slstay=.001;
+run;
